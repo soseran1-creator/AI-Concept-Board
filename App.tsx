@@ -47,7 +47,7 @@ const App: React.FC = () => {
           <div className="flex items-center gap-2">
             <span className="text-2xl">🎨</span>
             <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600">
-              ConceptCanvas AI
+              AI Concept Board
             </h1>
           </div>
           {hasKey && (
