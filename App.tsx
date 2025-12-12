@@ -38,6 +38,10 @@ const App: React.FC = () => {
     }
   };
 
+  const handleUpdateResult = (updatedData: ConceptBoardResult) => {
+    setResult(updatedData);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 to-indigo-50 text-slate-900 font-sans pb-20">
       
@@ -126,9 +130,13 @@ const App: React.FC = () => {
                 </div>
               )}
               {result || isGenerating ? (
-                <ConceptBoard data={result || {
-                  oneLineConcept: '', genreFormat: '', keyMessage: '', character: '', toneManner: '', imagePrompt: ''
-                }} isLoading={isGenerating} />
+                <ConceptBoard 
+                  data={result || {
+                    oneLineConcept: '', genreFormat: '', keyMessage: '', character: '', toneManner: '', imagePrompt: ''
+                  }} 
+                  isLoading={isGenerating} 
+                  onUpdate={handleUpdateResult}
+                />
               ) : (
                 <div className="h-[600px] flex flex-col items-center justify-center bg-white/50 border-2 border-dashed border-slate-300 rounded-xl text-slate-400">
                   <span className="text-4xl mb-4">👈</span>
