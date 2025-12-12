@@ -10,17 +10,33 @@ const BriefForm: React.FC<Props> = ({ onGenerate, isGenerating }) => {
   const [activeTab, setActiveTab] = useState<'general' | 'advanced'>('general');
   
   const [general, setGeneral] = useState<GeneralBrief>({
+    // 1. Overview
     contentName: '',
+    requestDept: '',
     purpose: '',
     usage: '',
+    contentNature: '',
+    // 2. Target
     targetAge: '',
-    keyTopic: '',
+    targetKnowledge: '',
+    // 3. Key Topic
+    keyMessage: '',
+    mustInclude: '',
+    mustAvoid: '',
+    // 4. Production
     length: '',
     aspectRatio: '',
-    format: '',
+    genre: '',
+    characterInfo: '',
     budgetDifficulty: '',
-    toneMannerReferences: '',
-    desiredOutcome: ''
+    // 5. Tone Manner
+    atmosphere: '',
+    refLink: '',
+    similarLink: '',
+    plannerRefLink: '',
+    colorPalette: '',
+    // 6. Outcome
+    knowledgeGained: ''
   });
 
   const [advanced, setAdvanced] = useState<AdvancedBrief>({
@@ -48,6 +64,18 @@ const BriefForm: React.FC<Props> = ({ onGenerate, isGenerating }) => {
     onGenerate(general, advanced);
   };
 
+  const RequiredLabel = ({ label }: { label: string }) => (
+    <label className="block text-sm font-semibold text-slate-800 mb-1">
+      <span className="text-red-500 mr-1">*</span>{label}
+    </label>
+  );
+
+  const OptionalLabel = ({ label }: { label: string }) => (
+    <label className="block text-sm font-medium text-slate-600 mb-1">
+      <span className="text-slate-400 font-normal mr-1">(선택)</span>{label}
+    </label>
+  );
+
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
       <div className="flex border-b border-slate-200">
@@ -73,67 +101,154 @@ const BriefForm: React.FC<Props> = ({ onGenerate, isGenerating }) => {
 
       <div className="p-6 max-h-[70vh] overflow-y-auto">
         {activeTab === 'general' && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">콘텐츠명</label>
-                <input name="contentName" value={general.contentName} onChange={handleGeneralChange} className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="예: 꼬마 과학자의 하루" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">제작 목적</label>
-                <input name="purpose" value={general.purpose} onChange={handleGeneralChange} className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="예: 신제품 홍보, 학습 동기 부여" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">콘텐츠 활용처</label>
-                <input name="usage" value={general.usage} onChange={handleGeneralChange} className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="예: 유튜브, 교실 수업, 인스타그램" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">타깃 정보 (연령 등)</label>
-                <input name="targetAge" value={general.targetAge} onChange={handleGeneralChange} className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="예: 초등학교 3학년, 30대 학부모" />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">핵심 주제 (주요 메시지)</label>
-              <textarea name="keyTopic" value={general.keyTopic} onChange={handleGeneralChange} className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none h-20" placeholder="콘텐츠가 전달해야 할 가장 중요한 메시지나 주제를 적어주세요." />
-            </div>
-
-            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-              <h3 className="text-sm font-bold text-slate-800 mb-3">제작 조건</h3>
+          <div className="space-y-8">
+            {/* 1. 콘텐츠 개요 */}
+            <div className="space-y-4">
+              <h3 className="text-md font-bold text-indigo-900 border-b pb-2 border-indigo-100 flex items-center">
+                <span className="bg-indigo-100 text-indigo-700 rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">1</span>
+                콘텐츠 개요
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs text-slate-500 mb-1">영상 길이</label>
-                  <input name="length" value={general.length} onChange={handleGeneralChange} className="w-full p-2 bg-white border border-slate-300 rounded text-sm" placeholder="예: 3분 내외" />
+                  <RequiredLabel label="콘텐츠명" />
+                  <input name="contentName" value={general.contentName} onChange={handleGeneralChange} className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="예: 꼬마 과학자의 하루" />
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-500 mb-1">화면 비율</label>
-                  <select name="aspectRatio" value={general.aspectRatio} onChange={handleGeneralChange} className="w-full p-2 bg-white border border-slate-300 rounded text-sm">
+                  <OptionalLabel label="요청 부서/ 담당자" />
+                  <input name="requestDept" value={general.requestDept} onChange={handleGeneralChange} className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50" />
+                </div>
+                <div>
+                  <RequiredLabel label="제작 목적" />
+                  <input name="purpose" value={general.purpose} onChange={handleGeneralChange} className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="예: 개념 이해 강화, 브랜드 홍보" />
+                </div>
+                <div>
+                  <RequiredLabel label="콘텐츠 활용처" />
+                  <input name="usage" value={general.usage} onChange={handleGeneralChange} className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="예: 교과서QR, 브랜드 SNS" />
+                </div>
+                <div className="md:col-span-2">
+                  <RequiredLabel label="콘텐츠 성격" />
+                  <input name="contentNature" value={general.contentNature} onChange={handleGeneralChange} className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="예: 정보형, 감성형, 서사형, 캐릭터 중심형" />
+                </div>
+              </div>
+            </div>
+
+            {/* 2. 타깃 정보 */}
+            <div className="space-y-4">
+              <h3 className="text-md font-bold text-indigo-900 border-b pb-2 border-indigo-100 flex items-center">
+                <span className="bg-indigo-100 text-indigo-700 rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">2</span>
+                타깃 정보
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <RequiredLabel label="대상 연령 및 수준" />
+                  <input name="targetAge" value={general.targetAge} onChange={handleGeneralChange} className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="예: 초등학교 5학년, 일반 사용자" />
+                </div>
+                <div>
+                  <OptionalLabel label="타깃의 사전 지식 수준" />
+                  <input name="targetKnowledge" value={general.targetKnowledge} onChange={handleGeneralChange} className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50" placeholder="예: 개념 기초 수준, 이해도 낮음" />
+                </div>
+              </div>
+            </div>
+
+            {/* 3. 핵심 주제 */}
+            <div className="space-y-4">
+              <h3 className="text-md font-bold text-indigo-900 border-b pb-2 border-indigo-100 flex items-center">
+                <span className="bg-indigo-100 text-indigo-700 rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">3</span>
+                핵심 주제
+              </h3>
+              <div>
+                <RequiredLabel label="주요 메시지" />
+                <textarea name="keyMessage" value={general.keyMessage} onChange={handleGeneralChange} className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none" rows={2} placeholder="예: 민주주의란 무엇인가?" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <OptionalLabel label="반드시 포함해야 할 내용" />
+                  <textarea name="mustInclude" value={general.mustInclude} onChange={handleGeneralChange} className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50" rows={2} placeholder="예: 민주주의 개념과 의미" />
+                </div>
+                <div>
+                  <OptionalLabel label="포함하면 안 되는 내용" />
+                  <textarea name="mustAvoid" value={general.mustAvoid} onChange={handleGeneralChange} className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50" rows={2} placeholder="예: 폭력적인 설정" />
+                </div>
+              </div>
+            </div>
+
+            {/* 4. 제작 조건 */}
+            <div className="space-y-4">
+              <h3 className="text-md font-bold text-indigo-900 border-b pb-2 border-indigo-100 flex items-center">
+                <span className="bg-indigo-100 text-indigo-700 rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">4</span>
+                제작 조건
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <RequiredLabel label="영상 길이" />
+                  <input name="length" value={general.length} onChange={handleGeneralChange} className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="예: 3분 내외" />
+                </div>
+                <div>
+                  <RequiredLabel label="화면 비율 및 포맷" />
+                  <select name="aspectRatio" value={general.aspectRatio} onChange={handleGeneralChange} className="w-full p-2 bg-white border border-slate-300 rounded text-sm focus:ring-2 focus:ring-indigo-500">
                     <option value="">선택하세요</option>
-                    <option value="16:9 (가로형)">16:9 (가로형)</option>
-                    <option value="9:16 (세로형)">9:16 (세로형 - 숏츠/릴스)</option>
+                    <option value="16:9 (가로형)">16:9 (가로형 - 유튜브 등)</option>
+                    <option value="9:16 (세로형)">9:16 (세로형 - 숏폼)</option>
                     <option value="1:1 (정방형)">1:1 (카드뉴스 등)</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-500 mb-1">제작 형태</label>
-                  <input name="format" value={general.format} onChange={handleGeneralChange} className="w-full p-2 bg-white border border-slate-300 rounded text-sm" placeholder="예: 시리즈물, 단편" />
+                  <RequiredLabel label="제작 형태(장르)" />
+                  <input name="genre" value={general.genre} onChange={handleGeneralChange} className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="예: 모션그래픽, 실사 촬영" />
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-500 mb-1">예산 및 난이도</label>
-                  <input name="budgetDifficulty" value={general.budgetDifficulty} onChange={handleGeneralChange} className="w-full p-2 bg-white border border-slate-300 rounded text-sm" placeholder="예: 중급 예산, 전문 모션그래픽 필요" />
+                  <RequiredLabel label="캐릭터 정보" />
+                  <input name="characterInfo" value={general.characterInfo} onChange={handleGeneralChange} className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="예: 메인 캐릭터 비바" />
+                </div>
+                <div className="md:col-span-2">
+                   <OptionalLabel label="예산 범위 또는 제작 난이도" />
+                   <input name="budgetDifficulty" value={general.budgetDifficulty} onChange={handleGeneralChange} className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50" placeholder="예: 상, 중, 하" />
                 </div>
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">톤 앤 매너 (레퍼런스)</label>
-              <textarea name="toneMannerReferences" value={general.toneMannerReferences} onChange={handleGeneralChange} className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none h-16" placeholder="참고할 스타일, 이미지 링크, 혹은 '밝고 활기찬 느낌' 등의 텍스트 설명" />
+            {/* 5. 톤 앤 매너 조건 */}
+            <div className="space-y-4">
+              <h3 className="text-md font-bold text-indigo-900 border-b pb-2 border-indigo-100 flex items-center">
+                <span className="bg-indigo-100 text-indigo-700 rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">5</span>
+                톤 앤 매너 조건
+              </h3>
+              <div>
+                <RequiredLabel label="콘텐츠의 전체 분위기" />
+                <input name="atmosphere" value={general.atmosphere} onChange={handleGeneralChange} className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="예: 밝고 유쾌, 정보 중심, 차분함" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <div>
+                   <OptionalLabel label="참고 이미지 또는 링크" />
+                   <input name="refLink" value={general.refLink} onChange={handleGeneralChange} className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50" />
+                 </div>
+                 <div>
+                   <OptionalLabel label="기존 제작물 중 유사 스타일 여부" />
+                   <input name="similarLink" value={general.similarLink} onChange={handleGeneralChange} className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50" />
+                 </div>
+                 <div>
+                   <OptionalLabel label="기획자가 원하는 톤 앤 매너 참고 영상" />
+                   <input name="plannerRefLink" value={general.plannerRefLink} onChange={handleGeneralChange} className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50" />
+                 </div>
+                 <div>
+                   <OptionalLabel label="색감 팔레트 지정" />
+                   <input name="colorPalette" value={general.colorPalette} onChange={handleGeneralChange} className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50" placeholder="예: 파스텔톤, 비비드" />
+                 </div>
+              </div>
             </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">최종 산출 희망 방향</label>
-              <input name="desiredOutcome" value={general.desiredOutcome} onChange={handleGeneralChange} className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="예: 시청자가 과학 원리를 쉽게 이해하고 흥미를 느낌" />
+
+             {/* 6. 최종 산출 희망 방향 */}
+             <div className="space-y-4">
+              <h3 className="text-md font-bold text-indigo-900 border-b pb-2 border-indigo-100 flex items-center">
+                <span className="bg-indigo-100 text-indigo-700 rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">6</span>
+                최종 산출 희망 방향
+              </h3>
+              <div>
+                <RequiredLabel label="이 콘텐츠를 본 사람이 얻는 지식" />
+                <input name="knowledgeGained" value={general.knowledgeGained} onChange={handleGeneralChange} className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="예: 개념을 바로 설명할 수 있다" />
+              </div>
             </div>
+
           </div>
         )}
 

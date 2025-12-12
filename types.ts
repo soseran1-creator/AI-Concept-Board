@@ -1,15 +1,36 @@
 export interface GeneralBrief {
+  // 1. Content Overview
   contentName: string;
+  requestDept: string; // (Optional)
   purpose: string;
   usage: string;
+  contentNature: string;
+
+  // 2. Target Info
   targetAge: string;
-  keyTopic: string;
+  targetKnowledge: string; // (Optional)
+
+  // 3. Key Topic
+  keyMessage: string;
+  mustInclude: string; // (Optional)
+  mustAvoid: string; // (Optional)
+
+  // 4. Production Conditions
   length: string;
   aspectRatio: string;
-  format: string;
-  budgetDifficulty: string;
-  toneMannerReferences: string; // Links or text description
-  desiredOutcome: string;
+  genre: string;
+  characterInfo: string;
+  budgetDifficulty: string; // (Optional)
+
+  // 5. Tone & Manner
+  atmosphere: string;
+  refLink: string; // (Optional)
+  similarLink: string; // (Optional)
+  plannerRefLink: string; // (Optional)
+  colorPalette: string; // (Optional)
+
+  // 6. Outcome
+  knowledgeGained: string;
 }
 
 export interface AdvancedBrief {

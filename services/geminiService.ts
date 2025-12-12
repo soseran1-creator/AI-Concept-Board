@@ -45,17 +45,38 @@ export const generateConceptBoard = async (
     Create a "Content Concept Board" based on the following user brief.
     
     --- GENERAL BRIEF ---
-    Content Name: ${general.contentName || "N/A"}
-    Purpose: ${general.purpose || "N/A"}
-    Usage Platform: ${general.usage || "N/A"}
-    Target Audience: ${general.targetAge || "N/A"}
-    Key Topic/Message: ${general.keyTopic || "N/A"}
-    Length: ${general.length || "N/A"}
-    Aspect Ratio: ${general.aspectRatio || "N/A"}
-    Format Type: ${general.format || "N/A"}
-    Budget/Difficulty: ${general.budgetDifficulty || "N/A"}
-    Tone & Manner Refs: ${general.toneMannerReferences || "N/A"}
-    Desired Outcome: ${general.desiredOutcome || "N/A"}
+    1. Content Overview
+    - Content Name: ${general.contentName || "N/A"}
+    - Request Dept/Manager: ${general.requestDept || "N/A"}
+    - Purpose: ${general.purpose || "N/A"}
+    - Usage Platform: ${general.usage || "N/A"}
+    - Nature/Style: ${general.contentNature || "N/A"}
+
+    2. Target Info
+    - Target Age/Level: ${general.targetAge || "N/A"}
+    - Target's Prior Knowledge: ${general.targetKnowledge || "N/A"}
+
+    3. Key Topic
+    - Key Message: ${general.keyMessage || "N/A"}
+    - Must Include: ${general.mustInclude || "N/A"}
+    - Must Avoid: ${general.mustAvoid || "N/A"}
+
+    4. Production Conditions
+    - Length: ${general.length || "N/A"}
+    - Aspect Ratio: ${general.aspectRatio || "N/A"}
+    - Production Genre/Format: ${general.genre || "N/A"}
+    - Character Info: ${general.characterInfo || "N/A"}
+    - Budget/Difficulty: ${general.budgetDifficulty || "N/A"}
+
+    5. Tone & Manner
+    - Atmosphere: ${general.atmosphere || "N/A"}
+    - References (Img/Link): ${general.refLink || "N/A"}
+    - Similar Work Refs: ${general.similarLink || "N/A"}
+    - Planner's Ref Video: ${general.plannerRefLink || "N/A"}
+    - Color Palette: ${general.colorPalette || "N/A"}
+
+    6. Desired Outcome
+    - Knowledge Gained: ${general.knowledgeGained || "N/A"}
   `;
 
   if (advanced.useGenreGuide) {
@@ -81,10 +102,17 @@ export const generateConceptBoard = async (
 
   prompt += `
     --- INSTRUCTIONS ---
-    Analyze the brief deeply. If information is missing, infer the best creative direction based on the available context (e.g., if Subject is Science, infer logical/visual tone).
+    Analyze the brief deeply. If information is missing, infer the best creative direction based on the available context.
     Output the result in JSON format matching the schema.
-    The "imagePrompt" must be in English and very descriptive for an AI image generator.
-    All other fields should be in Korean.
+    
+    - "oneLineConcept": Creative summary.
+    - "genreFormat": Specific format details.
+    - "keyMessage": Core message refined.
+    - "character": Detailed character description.
+    - "toneManner": Atmosphere description.
+    - "imagePrompt": A HIGHLY DETAILED English prompt for an AI image generator to visualize the concept. Describe lighting, style (e.g., 3D render, flat illustration), colors, and composition.
+
+    All fields (except imagePrompt) should be in Korean.
   `;
 
   // 2. Generate Text Content
@@ -103,7 +131,7 @@ export const generateConceptBoard = async (
   // 3. Generate Image
   try {
     const imageResponse = await ai.models.generateImages({
-      model: 'imagen-3.0-generate-002', // Using Imagen 3 as per recommended standard for high quality, or could use 'gemini-2.5-flash-image' if speed is priority. Trying Imagen first.
+      model: 'imagen-3.0-generate-002', 
       prompt: textResult.imagePrompt + ", high quality, detailed, concept art style",
       config: {
         numberOfImages: 1,
@@ -116,8 +144,7 @@ export const generateConceptBoard = async (
       textResult.generatedImageBase64 = imageResponse.generatedImages[0].image.imageBytes;
     }
   } catch (error) {
-    console.warn("Imagen generation failed, falling back to prompt only or trying alternative model if implemented.", error);
-    // Optional: Fallback logic could go here, but for now we just return the prompt if image fails.
+    console.warn("Imagen generation failed, falling back to prompt only.", error);
   }
 
   return textResult;
