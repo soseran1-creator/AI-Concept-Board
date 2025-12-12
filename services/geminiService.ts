@@ -6,27 +6,27 @@ const CONCEPT_SCHEMA: Schema = {
   properties: {
     oneLineConcept: {
       type: Type.STRING,
-      description: "A catchy, one-sentence concept summary.",
+      description: "A catchy, one-sentence concept summary (approx 30 Korean chars).",
     },
     genreFormat: {
       type: Type.STRING,
-      description: "The specific genre and format decided based on constraints.",
+      description: "Specific genre and technical format (ratio, length).",
     },
     keyMessage: {
       type: Type.STRING,
-      description: "The core message to be delivered.",
+      description: "The single core message/essence.",
     },
     character: {
       type: Type.STRING,
-      description: "Description of main characters or persona (visuals, personality).",
+      description: "Detailed character info including Role, Personality, Visual Style, and Function.",
     },
     toneManner: {
       type: Type.STRING,
-      description: "The visual and emotional tone (e.g., Bright, Educational, Serious).",
+      description: "Emotional Tone and Expressive Manner.",
     },
     imagePrompt: {
       type: Type.STRING,
-      description: "A detailed English prompt to generate a concept image representing this board.",
+      description: "A highly detailed English prompt for image generation.",
     },
   },
   required: ["oneLineConcept", "genreFormat", "keyMessage", "character", "toneManner", "imagePrompt"],
@@ -39,80 +39,86 @@ export const generateConceptBoard = async (
 ): Promise<ConceptBoardResult> => {
   const ai = new GoogleGenAI({ apiKey });
 
-  // 1. Construct the prompt
+  // 1. Construct the prompt with strict guidelines
   let prompt = `
     You are an expert Creative Director for educational and promotional content.
-    Create a "Content Concept Board" based on the following user brief.
+    Your task is to generate a professional "Content Concept Board" based on the user's brief.
     
-    --- GENERAL BRIEF ---
-    1. Content Overview
-    - Content Name: ${general.contentName || "N/A"}
-    - Request Dept/Manager: ${general.requestDept || "N/A"}
+    You must strictly adhere to the following definitions for each output field. 
+    If the user's input is missing or vague, use your professional judgment to fill in the gaps creatively and logically to create a high-quality output.
+
+    --- DEFINITIONS & RULES FOR OUTPUT ---
+
+    1. One-line Concept (한 줄 컨셉):
+       - Definition: The "identity" of the content compressed into one sentence.
+       - Rule: Approx 30 Korean characters. Short, intuitive, and catchy.
+       - Goal: Reveal the core direction. "What does this content want to say?"
+       - Format Example: "Min-soo's lucky day story that explains complex systems easily."
+
+    2. Genre & Format (장르 및 포맷):
+       - Definition: Agreement on the form and expression method.
+       - Rule: Clearly specify BOTH Genre (Expression method: e.g., Motion Graphics, Vlog, Drama) AND Format (Tech specs: e.g., 16:9, Full HD, 3 mins).
+
+    3. Core Message (핵심 메시지):
+       - Definition: The single central meaning.
+       - Rule: The one sentence that remains in the viewer's head. Not a dry textbook definition, but the "essence" of the meaning.
+       - Example: "Parliament is the institution that gathers opinions to make laws." (vs "Parliament definition...")
+
+    4. Character (캐릭터):
+       - Definition: The subject delivering the message (Persona).
+       - Rule: You MUST include these 4 aspects:
+         1) Role: What do they do?
+         2) Personality: Tone/Speech style.
+         3) Visual Style: Appearance description.
+         4) Function: What do they explain/represent?
+
+    5. Tone & Manner (톤 앤 매너):
+       - Definition: Emotional atmosphere (Tone) and Method of Expression (Manner).
+       - Rule: Define the TONE (e.g., Bright, Calm, Serious) AND the MANNER (e.g., Fast-paced editing, Pastel colors, Hand-held camera).
+
+    6. Concept Image Prompt (for generation):
+       - Create a detailed description of the main scene, character, or background that visualizes the "One-line Concept" and "Tone & Manner".
+
+    --- USER BRIEF INPUT ---
+    
+    [1. General Brief]
+    - Content Name: ${general.contentName || "Suggest a suitable name"}
     - Purpose: ${general.purpose || "N/A"}
-    - Usage Platform: ${general.usage || "N/A"}
-    - Nature/Style: ${general.contentNature || "N/A"}
+    - Usage: ${general.usage || "N/A"}
+    - Nature: ${general.contentNature || "N/A"}
+    - Target: ${general.targetAge} (Knowledge Level: ${general.targetKnowledge || "Normal"})
+    - Key Topic/Message: ${general.keyMessage} (Must Include: ${general.mustInclude}, Avoid: ${general.mustAvoid})
+    - Production: Length ${general.length}, Ratio ${general.aspectRatio}, Genre ${general.genre}, Char Info ${general.characterInfo}
+    - Tone/Atmosphere: ${general.atmosphere} (Color: ${general.colorPalette})
+    - Desired Outcome: ${general.knowledgeGained}
 
-    2. Target Info
-    - Target Age/Level: ${general.targetAge || "N/A"}
-    - Target's Prior Knowledge: ${general.targetKnowledge || "N/A"}
-
-    3. Key Topic
-    - Key Message: ${general.keyMessage || "N/A"}
-    - Must Include: ${general.mustInclude || "N/A"}
-    - Must Avoid: ${general.mustAvoid || "N/A"}
-
-    4. Production Conditions
-    - Length: ${general.length || "N/A"}
-    - Aspect Ratio: ${general.aspectRatio || "N/A"}
-    - Production Genre/Format: ${general.genre || "N/A"}
-    - Character Info: ${general.characterInfo || "N/A"}
-    - Budget/Difficulty: ${general.budgetDifficulty || "N/A"}
-
-    5. Tone & Manner
-    - Atmosphere: ${general.atmosphere || "N/A"}
-    - References (Img/Link): ${general.refLink || "N/A"}
-    - Similar Work Refs: ${general.similarLink || "N/A"}
-    - Planner's Ref Video: ${general.plannerRefLink || "N/A"}
-    - Color Palette: ${general.colorPalette || "N/A"}
-
-    6. Desired Outcome
-    - Knowledge Gained: ${general.knowledgeGained || "N/A"}
+    [2. Advanced Guides (If applicable)]
   `;
 
   if (advanced.useGenreGuide) {
     prompt += `
-    --- GENRE GUIDE ---
-    Strictly follow the style of: ${advanced.selectedGenre}
+    - Genre Guide: Follow the style of "${advanced.selectedGenre}".
     `;
   }
 
   if (advanced.useSubjectGuide) {
     prompt += `
-    --- SUBJECT GUIDE (${advanced.selectedSubject}) ---
-    Apply these subject-specific characteristics: ${advanced.subjectCharacteristics}
+    - Subject Guide (${advanced.selectedSubject}): Apply characteristics: "${advanced.subjectCharacteristics}".
     `;
   }
 
   if (advanced.useGradeGuide) {
     prompt += `
-    --- TARGET/GRADE GUIDE (${advanced.selectedGrade}) ---
-    Apply these target-specific characteristics: ${advanced.gradeCharacteristics}
+    - Target Guide (${advanced.selectedGrade}): Apply characteristics: "${advanced.gradeCharacteristics}".
     `;
   }
 
   prompt += `
     --- INSTRUCTIONS ---
-    Analyze the brief deeply. If information is missing, infer the best creative direction based on the available context.
-    Output the result in JSON format matching the schema.
-    
-    - "oneLineConcept": Creative summary.
-    - "genreFormat": Specific format details.
-    - "keyMessage": Core message refined.
-    - "character": Detailed character description.
-    - "toneManner": Atmosphere description.
-    - "imagePrompt": A HIGHLY DETAILED English prompt for an AI image generator to visualize the concept. Describe lighting, style (e.g., 3D render, flat illustration), colors, and composition.
-
-    All fields (except imagePrompt) should be in Korean.
+    1. Analyze the brief deeply.
+    2. Output strictly in JSON format matching the schema.
+    3. Ensure all text fields (oneLineConcept, genreFormat, etc.) are in **Korean**.
+    4. The "imagePrompt" must be in **English** and very detailed for an image generator (describe lighting, composition, style, subject).
   `;
 
   // 2. Generate Text Content
@@ -122,7 +128,7 @@ export const generateConceptBoard = async (
     config: {
       responseMimeType: "application/json",
       responseSchema: CONCEPT_SCHEMA,
-      temperature: 0.7,
+      temperature: 0.75, // Slightly higher for creativity
     },
   });
 
@@ -132,7 +138,7 @@ export const generateConceptBoard = async (
   try {
     const imageResponse = await ai.models.generateImages({
       model: 'imagen-3.0-generate-002', 
-      prompt: textResult.imagePrompt + ", high quality, detailed, concept art style",
+      prompt: textResult.imagePrompt + ", high quality, detailed, concept art, 4k resolution, cinematic lighting",
       config: {
         numberOfImages: 1,
         aspectRatio: general.aspectRatio && general.aspectRatio.includes("9:16") ? "9:16" : "16:9",

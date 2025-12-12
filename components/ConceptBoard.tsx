@@ -18,10 +18,12 @@ const ConceptBoard: React.FC<Props> = ({ data, isLoading, onUpdate }) => {
 
     setIsExporting(true);
     try {
+      // Use html2canvas to capture the element
       const canvas = await html2canvas(input, {
         scale: 2, // Higher scale for better quality
-        useCORS: true, // Needed for base64 images sometimes or external resources
-        backgroundColor: '#ffffff'
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false
       });
       
       const imgData = canvas.toDataURL('image/png');
@@ -41,7 +43,7 @@ const ConceptBoard: React.FC<Props> = ({ data, isLoading, onUpdate }) => {
       pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
 
-      // Handle multi-page if content is very long (though usually one page for concept board)
+      // Handle multi-page if content is very long
       while (heightLeft >= 0) {
         position = heightLeft - imgHeight;
         pdf.addPage();
@@ -69,20 +71,30 @@ const ConceptBoard: React.FC<Props> = ({ data, isLoading, onUpdate }) => {
 
   if (isLoading) {
     return (
-      <div className="w-full h-full min-h-[400px] flex flex-col items-center justify-center bg-white rounded-xl shadow-lg border border-slate-200 p-8 animate-pulse">
-        <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p className="text-slate-500 font-medium text-lg">AI가 컨셉보드를 기획하고 있습니다...</p>
-        <p className="text-slate-400 text-sm mt-2">이미지 생성에는 시간이 조금 걸릴 수 있습니다.</p>
+      <div className="w-full h-full min-h-[600px] flex flex-col items-center justify-center bg-white rounded-xl shadow-lg border border-slate-200 p-8 animate-pulse">
+        <div className="w-20 h-20 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-6"></div>
+        <p className="text-slate-800 font-bold text-xl mb-2">AI가 컨셉보드를 기획하고 있습니다...</p>
+        <p className="text-slate-500 text-sm">브리프 분석 중 • 캐릭터 설정 중 • 이미지 생성 중</p>
       </div>
     );
   }
+
+  const ThComponent = ({ title, subtitle }: { title: string, subtitle: string }) => (
+    <th className="w-[180px] py-6 px-4 bg-slate-50 text-left border-r border-slate-200 align-top">
+      <div className="flex flex-col">
+        <span className="text-slate-800 font-bold text-lg leading-tight mb-1">{title}</span>
+        <span className="text-slate-400 font-medium text-xs uppercase tracking-wide">{subtitle}</span>
+      </div>
+    </th>
+  );
 
   return (
     <div className="flex flex-col gap-4">
       {/* Action Bar */}
       <div className="flex justify-between items-center bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
-        <div className="text-sm text-slate-500 px-2">
-          💡 텍스트를 클릭하여 내용을 직접 수정할 수 있습니다.
+        <div className="text-sm text-slate-500 px-2 flex items-center gap-2">
+          <span>💡</span>
+          <span>내용을 클릭하여 직접 수정할 수 있습니다.</span>
         </div>
         <button
           onClick={handleDownloadPDF}
@@ -93,7 +105,7 @@ const ConceptBoard: React.FC<Props> = ({ data, isLoading, onUpdate }) => {
               : 'bg-indigo-600 hover:bg-indigo-700 shadow hover:shadow-md'
           }`}
         >
-          {isExporting ? '다운로드 중...' : 'PDF 다운로드 📥'}
+          {isExporting ? 'PDF 생성 중...' : 'PDF 다운로드 📥'}
         </button>
       </div>
 
@@ -102,106 +114,116 @@ const ConceptBoard: React.FC<Props> = ({ data, isLoading, onUpdate }) => {
         id="concept-board-export-area"
         className="bg-white rounded-xl shadow-xl overflow-hidden border border-slate-200"
       >
-        <div className="bg-indigo-600 p-4 text-white text-center font-bold text-xl tracking-wide">
-          PROJECT CONCEPT BOARD
+        <div className="bg-slate-900 p-6 text-white flex justify-between items-end border-b-4 border-indigo-500">
+          <div>
+            <h2 className="text-2xl font-bold tracking-wider">PROJECT CONCEPT BOARD</h2>
+            <p className="text-slate-400 text-sm mt-1">AI Creative Director generated plan</p>
+          </div>
+          <div className="text-right">
+            <div className="text-xs text-slate-400">Date</div>
+            <div className="font-mono">{new Date().toLocaleDateString()}</div>
+          </div>
         </div>
         
-        <div className="p-6">
-          <table className="w-full border-collapse table-fixed">
+        <div className="p-0">
+          <table className="w-full border-collapse">
             <tbody>
+              {/* 1. Concept */}
               <tr className="border-b border-slate-200">
-                <th className="w-1/4 py-4 px-6 bg-slate-50 text-left text-slate-700 font-bold border-r border-slate-200 align-middle">
-                  한 줄 컨셉
-                </th>
-                <td className="w-3/4 py-2 px-4 text-slate-800 text-lg font-medium leading-relaxed">
+                <ThComponent title="① 한 줄 컨셉" subtitle="Concept" />
+                <td className="p-4 align-top">
                   <textarea 
                     value={data.oneLineConcept}
                     onChange={(e) => handleChange('oneLineConcept', e.target.value)}
-                    className="w-full bg-transparent border border-transparent hover:border-slate-200 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded p-2 outline-none resize-none transition-all"
-                    rows={2}
+                    className="w-full h-full min-h-[60px] bg-transparent border border-transparent hover:border-slate-200 focus:border-indigo-300 focus:bg-indigo-50/30 rounded p-2 outline-none resize-none transition-all text-lg font-bold text-slate-800 leading-relaxed"
+                    placeholder="컨셉 내용이 입력됩니다."
                   />
                 </td>
               </tr>
+              
+              {/* 2. Genre & Format */}
               <tr className="border-b border-slate-200">
-                <th className="py-4 px-6 bg-slate-50 text-left text-slate-700 font-bold border-r border-slate-200 align-middle">
-                  장르 및 포맷
-                </th>
-                <td className="py-2 px-4 text-slate-600">
+                <ThComponent title="② 장르 및 포맷" subtitle="Genre & Format" />
+                <td className="p-4 align-top">
                   <textarea 
                     value={data.genreFormat}
                     onChange={(e) => handleChange('genreFormat', e.target.value)}
-                    className="w-full bg-transparent border border-transparent hover:border-slate-200 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded p-2 outline-none resize-none transition-all"
-                    rows={2}
+                    className="w-full h-full min-h-[80px] bg-transparent border border-transparent hover:border-slate-200 focus:border-indigo-300 focus:bg-indigo-50/30 rounded p-2 outline-none resize-none transition-all text-slate-700 leading-relaxed"
                   />
                 </td>
               </tr>
+
+              {/* 3. Core Message */}
               <tr className="border-b border-slate-200">
-                <th className="py-4 px-6 bg-slate-50 text-left text-slate-700 font-bold border-r border-slate-200 align-middle">
-                  핵심 메시지
-                </th>
-                <td className="py-2 px-4 text-slate-600">
+                <ThComponent title="③ 핵심 메시지" subtitle="Core Message" />
+                <td className="p-4 align-top">
                   <textarea 
                     value={data.keyMessage}
                     onChange={(e) => handleChange('keyMessage', e.target.value)}
-                    className="w-full bg-transparent border border-transparent hover:border-slate-200 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded p-2 outline-none resize-none transition-all"
-                    rows={3}
+                    className="w-full h-full min-h-[80px] bg-transparent border border-transparent hover:border-slate-200 focus:border-indigo-300 focus:bg-indigo-50/30 rounded p-2 outline-none resize-none transition-all text-slate-700 leading-relaxed font-medium"
                   />
                 </td>
               </tr>
+
+              {/* 4. Character */}
               <tr className="border-b border-slate-200">
-                <th className="py-4 px-6 bg-slate-50 text-left text-slate-700 font-bold border-r border-slate-200 align-middle">
-                  캐릭터
-                </th>
-                <td className="py-2 px-4 text-slate-600">
+                <ThComponent title="④ 캐릭터" subtitle="Character" />
+                <td className="p-4 align-top">
                   <textarea 
                     value={data.character}
                     onChange={(e) => handleChange('character', e.target.value)}
-                    className="w-full bg-transparent border border-transparent hover:border-slate-200 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded p-2 outline-none resize-none transition-all"
-                    rows={3}
+                    className="w-full h-full min-h-[140px] bg-transparent border border-transparent hover:border-slate-200 focus:border-indigo-300 focus:bg-indigo-50/30 rounded p-2 outline-none resize-none transition-all text-slate-700 leading-relaxed whitespace-pre-wrap"
                   />
                 </td>
               </tr>
+
+              {/* 5. Tone & Manner */}
               <tr className="border-b border-slate-200">
-                <th className="py-4 px-6 bg-slate-50 text-left text-slate-700 font-bold border-r border-slate-200 align-middle">
-                  톤 앤 매너
-                </th>
-                <td className="py-2 px-4 text-slate-600">
+                <ThComponent title="⑤ 톤 앤 매너" subtitle="Tone & Manner" />
+                <td className="p-4 align-top">
                   <textarea 
                     value={data.toneManner}
                     onChange={(e) => handleChange('toneManner', e.target.value)}
-                    className="w-full bg-transparent border border-transparent hover:border-slate-200 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded p-2 outline-none resize-none transition-all"
-                    rows={3}
+                    className="w-full h-full min-h-[100px] bg-transparent border border-transparent hover:border-slate-200 focus:border-indigo-300 focus:bg-indigo-50/30 rounded p-2 outline-none resize-none transition-all text-slate-700 leading-relaxed"
                   />
                 </td>
               </tr>
+
+              {/* 6. Concept Image */}
               <tr>
-                <th className="py-4 px-6 bg-slate-50 text-left text-slate-700 font-bold border-r border-slate-200 align-top">
-                  컨셉 이미지
-                </th>
-                <td className="py-4 px-6">
+                <ThComponent title="⑥ 컨셉 이미지" subtitle="Key Scenes" />
+                <td className="p-6 align-top bg-slate-50/50">
                   {data.generatedImageBase64 ? (
-                    <div className="flex flex-col gap-2">
-                      <div className="relative group w-full max-w-md rounded-lg overflow-hidden shadow-md mx-auto">
+                    <div className="flex flex-col gap-3">
+                      <div className="relative group w-full rounded-xl overflow-hidden shadow-lg border border-slate-200">
                         <img 
                           src={`data:image/jpeg;base64,${data.generatedImageBase64}`} 
                           alt="Generated Concept" 
                           className="w-full h-auto object-cover"
                         />
                       </div>
-                      <div className="mt-2">
-                         <label className="text-xs text-slate-400 font-bold mb-1 block">프롬프트 (수정 불가)</label>
-                         <p className="text-xs text-slate-500 bg-slate-50 p-2 rounded border border-slate-100">{data.imagePrompt}</p>
+                      <div className="mt-1">
+                         <label className="text-[10px] text-slate-400 font-bold mb-1 block uppercase tracking-wider">Image Generation Prompt</label>
+                         <p className="text-xs text-slate-500 font-mono bg-white p-3 rounded border border-slate-200 shadow-sm">{data.imagePrompt}</p>
                       </div>
                     </div>
                   ) : (
-                    <div className="bg-slate-100 rounded-lg p-4 border border-slate-300 border-dashed">
-                      <p className="text-slate-500 text-sm italic mb-2">이미지를 생성하지 못했습니다. 아래 프롬프트를 참고하세요:</p>
-                      <textarea 
-                        value={data.imagePrompt}
-                        onChange={(e) => handleChange('imagePrompt', e.target.value)}
-                        className="w-full bg-white border border-slate-300 rounded p-2 text-sm font-mono text-slate-700"
-                        rows={3}
-                      />
+                    <div className="flex flex-col gap-3">
+                      <div className="bg-slate-100 rounded-xl p-8 border-2 border-slate-300 border-dashed flex items-center justify-center text-slate-400 h-[300px]">
+                        <div className="text-center">
+                          <span className="text-4xl block mb-2">🖼️</span>
+                          <span className="text-sm">이미지 생성에 실패했거나 대기 중입니다.</span>
+                        </div>
+                      </div>
+                      <div className="mt-1">
+                        <label className="text-[10px] text-slate-400 font-bold mb-1 block uppercase tracking-wider">Suggested Prompt</label>
+                        <textarea 
+                          value={data.imagePrompt}
+                          onChange={(e) => handleChange('imagePrompt', e.target.value)}
+                          className="w-full bg-white border border-slate-300 rounded p-3 text-xs font-mono text-slate-600"
+                          rows={3}
+                        />
+                      </div>
                     </div>
                   )}
                 </td>
