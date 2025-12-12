@@ -10,8 +10,9 @@ interface Props {
   onUpdate?: (updatedData: ConceptBoardResult) => void;
 }
 
-// Helper component for auto-resizing textareas
-const AutoResizeTextarea = ({
+// Replaced AutoResizeTextarea with a contentEditable div
+// This ensures the element naturally grows with content, preventing PDF cutoff issues
+const EditableCell = ({
   value,
   onChange,
   className,
@@ -19,33 +20,36 @@ const AutoResizeTextarea = ({
   placeholder
 }: {
   value: string;
-  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  onChange: (val: string) => void;
   className: string;
   minHeight?: string;
   placeholder?: string;
 }) => {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
-  const resize = () => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto'; // Reset height
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`; // Set to scrollHeight
-    }
-  };
-
+  // Sync internal text content with prop value updates (from AI generation)
   useEffect(() => {
-    resize();
+    if (contentRef.current && contentRef.current.innerText !== value) {
+      contentRef.current.innerText = value;
+    }
   }, [value]);
 
+  const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
+    const newValue = e.currentTarget.innerText;
+    onChange(newValue);
+  };
+
   return (
-    <textarea
-      ref={textareaRef}
-      value={value}
-      onChange={onChange}
-      className={`${className} overflow-hidden`}
+    <div
+      ref={contentRef}
+      contentEditable
+      suppressContentEditableWarning
+      onInput={handleInput}
+      className={`${className} overflow-visible whitespace-pre-wrap break-words`}
       style={{ minHeight: minHeight }}
-      placeholder={placeholder}
-      rows={1}
+      role="textbox"
+      aria-multiline="true"
+      data-placeholder={placeholder}
     />
   );
 };
@@ -58,24 +62,35 @@ const ConceptBoard: React.FC<Props> = ({ data, generalBrief, isLoading, onUpdate
     if (!input) return;
 
     setIsExporting(true);
+    
+    // Add a temporary class to ensure borders/styles look sharp for print
+    input.classList.add('pdf-mode');
+
     try {
       // 1. Capture the element at high resolution
+      // We wait a tick to ensure any layout shifts are settled
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       const canvas = await html2canvas(input, {
-        scale: 2, // High resolution for better text clarity
-        useCORS: true,
+        scale: 2, // High resolution for text clarity
+        useCORS: true, // Allow external images (if configured correctly)
+        allowTaint: true,
         backgroundColor: '#ffffff',
-        logging: false
+        logging: false,
+        // Crucial: ensure we capture the full scroll height
+        height: input.offsetHeight,
+        windowHeight: input.scrollHeight
       });
       
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
       const pdf = new jsPDF('p', 'mm', 'a4');
       
       // 2. Define Page & Margins
       const pageWidth = pdf.internal.pageSize.getWidth(); // 210mm
       const pageHeight = pdf.internal.pageSize.getHeight(); // 297mm
       
-      // 10% margin
-      const margin = pageWidth * 0.1; 
+      // 5% margin (reduced from 10% to allow more content space)
+      const margin = 10; 
       const maxPrintWidth = pageWidth - (margin * 2);
       const maxPrintHeight = pageHeight - (margin * 2);
 
@@ -87,26 +102,30 @@ const ConceptBoard: React.FC<Props> = ({ data, generalBrief, isLoading, onUpdate
 
       let finalWidth, finalHeight;
 
-      // If image is "taller" than the print area (relative to width), constrain by height
+      // Logic to fit entirely on one page
       if (imgRatio < printRatio) {
+        // Image is taller than the printable area (relative to width)
+        // Constrain by height
         finalHeight = maxPrintHeight;
         finalWidth = finalHeight * imgRatio;
       } else {
-        // Otherwise constrain by width
+        // Image is wider (or equal)
+        // Constrain by width
         finalWidth = maxPrintWidth;
         finalHeight = finalWidth / imgRatio;
       }
 
-      // 4. Center the image horizontally (optional, but looks better if constrained by height)
+      // 4. Center the image horizontally
       const xOffset = margin + (maxPrintWidth - finalWidth) / 2;
       const yOffset = margin; // Top margin
 
-      pdf.addImage(imgData, 'PNG', xOffset, yOffset, finalWidth, finalHeight);
+      pdf.addImage(imgData, 'JPEG', xOffset, yOffset, finalWidth, finalHeight);
       pdf.save('AI_Concept_Board.pdf');
     } catch (error) {
       console.error('PDF generation failed', error);
       alert('PDF 다운로드 중 오류가 발생했습니다.');
     } finally {
+      input.classList.remove('pdf-mode');
       setIsExporting(false);
     }
   };
@@ -163,9 +182,9 @@ const ConceptBoard: React.FC<Props> = ({ data, generalBrief, isLoading, onUpdate
       {/* Concept Board Area (Wrapper for Export) */}
       <div 
         id="concept-board-export-area"
-        className="bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden flex flex-col"
+        className="bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden flex flex-col w-full"
       >
-        {/* PDF Header Info (Shows only if content exists or as placeholder) */}
+        {/* PDF Header Info */}
         <div className="px-8 pt-8 pb-4 bg-white flex justify-end">
            <div className="text-right">
               <span className="text-sm font-bold text-slate-500 mr-2">요청 부서/담당자, 제작 부서/담당자:</span>
@@ -194,10 +213,10 @@ const ConceptBoard: React.FC<Props> = ({ data, generalBrief, isLoading, onUpdate
                 <tr className="border-b border-slate-200">
                   <ThComponent title="① 한 줄 컨셉" subtitle="Concept" />
                   <td className="p-4 align-top">
-                    <AutoResizeTextarea
+                    <EditableCell
                       value={data.oneLineConcept}
-                      onChange={(e) => handleChange('oneLineConcept', e.target.value)}
-                      className="w-full bg-transparent border border-transparent hover:border-slate-200 focus:border-indigo-300 focus:bg-indigo-50/30 rounded p-2 outline-none resize-none transition-all text-lg font-bold text-slate-800 leading-relaxed"
+                      onChange={(val) => handleChange('oneLineConcept', val)}
+                      className="w-full bg-transparent border border-transparent hover:border-slate-200 focus:border-indigo-300 focus:bg-indigo-50/30 rounded p-2 outline-none transition-all text-lg font-bold text-slate-800 leading-relaxed"
                       placeholder="컨셉 내용이 입력됩니다."
                       minHeight="60px"
                     />
@@ -208,10 +227,10 @@ const ConceptBoard: React.FC<Props> = ({ data, generalBrief, isLoading, onUpdate
                 <tr className="border-b border-slate-200">
                   <ThComponent title="② 장르 및 포맷" subtitle="Genre & Format" />
                   <td className="p-4 align-top">
-                    <AutoResizeTextarea 
+                    <EditableCell 
                       value={data.genreFormat}
-                      onChange={(e) => handleChange('genreFormat', e.target.value)}
-                      className="w-full bg-transparent border border-transparent hover:border-slate-200 focus:border-indigo-300 focus:bg-indigo-50/30 rounded p-2 outline-none resize-none transition-all text-slate-700 leading-relaxed"
+                      onChange={(val) => handleChange('genreFormat', val)}
+                      className="w-full bg-transparent border border-transparent hover:border-slate-200 focus:border-indigo-300 focus:bg-indigo-50/30 rounded p-2 outline-none transition-all text-slate-700 leading-relaxed"
                       minHeight="80px"
                     />
                   </td>
@@ -221,10 +240,10 @@ const ConceptBoard: React.FC<Props> = ({ data, generalBrief, isLoading, onUpdate
                 <tr className="border-b border-slate-200">
                   <ThComponent title="③ 핵심 메시지" subtitle="Core Message" />
                   <td className="p-4 align-top">
-                    <AutoResizeTextarea
+                    <EditableCell
                       value={data.keyMessage}
-                      onChange={(e) => handleChange('keyMessage', e.target.value)}
-                      className="w-full bg-transparent border border-transparent hover:border-slate-200 focus:border-indigo-300 focus:bg-indigo-50/30 rounded p-2 outline-none resize-none transition-all text-slate-700 leading-relaxed font-medium"
+                      onChange={(val) => handleChange('keyMessage', val)}
+                      className="w-full bg-transparent border border-transparent hover:border-slate-200 focus:border-indigo-300 focus:bg-indigo-50/30 rounded p-2 outline-none transition-all text-slate-700 leading-relaxed font-medium"
                       minHeight="80px"
                     />
                   </td>
@@ -234,10 +253,10 @@ const ConceptBoard: React.FC<Props> = ({ data, generalBrief, isLoading, onUpdate
                 <tr className="border-b border-slate-200">
                   <ThComponent title="④ 캐릭터" subtitle="Character" />
                   <td className="p-4 align-top">
-                    <AutoResizeTextarea 
+                    <EditableCell 
                       value={data.character}
-                      onChange={(e) => handleChange('character', e.target.value)}
-                      className="w-full bg-transparent border border-transparent hover:border-slate-200 focus:border-indigo-300 focus:bg-indigo-50/30 rounded p-2 outline-none resize-none transition-all text-slate-700 leading-relaxed whitespace-pre-wrap"
+                      onChange={(val) => handleChange('character', val)}
+                      className="w-full bg-transparent border border-transparent hover:border-slate-200 focus:border-indigo-300 focus:bg-indigo-50/30 rounded p-2 outline-none transition-all text-slate-700 leading-relaxed"
                       minHeight="140px"
                     />
                   </td>
@@ -247,10 +266,10 @@ const ConceptBoard: React.FC<Props> = ({ data, generalBrief, isLoading, onUpdate
                 <tr className="border-b border-slate-200">
                   <ThComponent title="⑤ 톤 앤 매너" subtitle="Tone & Manner" />
                   <td className="p-4 align-top">
-                    <AutoResizeTextarea
+                    <EditableCell
                       value={data.toneManner}
-                      onChange={(e) => handleChange('toneManner', e.target.value)}
-                      className="w-full bg-transparent border border-transparent hover:border-slate-200 focus:border-indigo-300 focus:bg-indigo-50/30 rounded p-2 outline-none resize-none transition-all text-slate-700 leading-relaxed"
+                      onChange={(val) => handleChange('toneManner', val)}
+                      className="w-full bg-transparent border border-transparent hover:border-slate-200 focus:border-indigo-300 focus:bg-indigo-50/30 rounded p-2 outline-none transition-all text-slate-700 leading-relaxed"
                       minHeight="100px"
                     />
                   </td>
@@ -284,9 +303,9 @@ const ConceptBoard: React.FC<Props> = ({ data, generalBrief, isLoading, onUpdate
                         </div>
                         <div className="mt-1">
                           <label className="text-[10px] text-slate-400 font-bold mb-1 block uppercase tracking-wider">Suggested Prompt</label>
-                          <AutoResizeTextarea
+                          <EditableCell
                             value={data.imagePrompt}
-                            onChange={(e) => handleChange('imagePrompt', e.target.value)}
+                            onChange={(val) => handleChange('imagePrompt', val)}
                             className="w-full bg-white border border-slate-300 rounded p-3 text-xs font-mono text-slate-600"
                             minHeight="60px"
                           />
