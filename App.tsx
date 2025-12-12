@@ -13,6 +13,7 @@ const App: React.FC = () => {
   const [hasKey, setHasKey] = useState<boolean>(false);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [result, setResult] = useState<ConceptBoardResult | null>(null);
+  const [currentBrief, setCurrentBrief] = useState<GeneralBrief | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleKeySubmit = (e: React.FormEvent) => {
@@ -26,6 +27,7 @@ const App: React.FC = () => {
     setIsGenerating(true);
     setError(null);
     setResult(null);
+    setCurrentBrief(general); // Store the brief for display/export
 
     try {
       const data = await generateConceptBoard(apiKey, general, advanced);
@@ -134,6 +136,7 @@ const App: React.FC = () => {
                   data={result || {
                     oneLineConcept: '', genreFormat: '', keyMessage: '', character: '', toneManner: '', imagePrompt: ''
                   }} 
+                  generalBrief={currentBrief}
                   isLoading={isGenerating} 
                   onUpdate={handleUpdateResult}
                 />
