@@ -6,7 +6,7 @@ const CONCEPT_SCHEMA: Schema = {
   properties: {
     oneLineConcept: {
       type: Type.STRING,
-      description: "A catchy, one-sentence concept summary (approx 30 Korean chars).",
+      description: "A comprehensive concept description including Type, Style, Visuals, Tone, Goal, and Media.",
     },
     genreFormat: {
       type: Type.STRING,
@@ -50,10 +50,16 @@ export const generateConceptBoard = async (
     --- DEFINITIONS & RULES FOR OUTPUT ---
 
     1. One-line Concept (한 줄 컨셉):
-       - Definition: The "identity" of the content compressed into one sentence.
-       - Rule: Approx 30 Korean characters. Short, intuitive, and catchy.
-       - Goal: Reveal the core direction. "What does this content want to say?"
-       - Format Example: "Min-soo's lucky day story that explains complex systems easily."
+       - Definition: A concrete and comprehensive description of the video's identity.
+       - Rule: You MUST include the following 6 specific elements in the description:
+         1) Video Type (영상 형식): e.g., Explainer, Narration-based, Character-driven, Animation, etc.
+         2) Directing Style (연출 방식): e.g., Cinematic look, Storytelling-based, Reenactment, etc.
+         3) Visual Elements (등장 요소): e.g., Characters, specific objects, motion graphics, etc.
+         4) Emotional Tone (감정 톤): e.g., Witty, Serious, Trustworthy, Touching.
+         5) Expression Goal (표현 방식 목표): e.g., To simplify complex concepts, To evoke empathy.
+         6) Usage Media (활용 매체): e.g., YouTube, Classroom TV, SNS.
+       - Format: Write as a cohesive, descriptive paragraph (approx 2-3 sentences) in Korean. Do not just list them, weave them into a plan.
+       - Example: "This is a [Character-driven Motion Graphic] designed for [Classroom TV]. It features [a friendly robot character] and uses [storytelling-based directing] to [simplify complex science concepts]. The tone is [bright and witty] to keep students engaged."
 
     2. Genre & Format (장르 및 포맷):
        - Definition: Agreement on the form and expression method.

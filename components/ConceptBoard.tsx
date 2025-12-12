@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ConceptBoardResult, GeneralBrief } from '../types';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
@@ -9,6 +9,46 @@ interface Props {
   isLoading: boolean;
   onUpdate?: (updatedData: ConceptBoardResult) => void;
 }
+
+// Helper component for auto-resizing textareas
+const AutoResizeTextarea = ({
+  value,
+  onChange,
+  className,
+  minHeight = "60px",
+  placeholder
+}: {
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  className: string;
+  minHeight?: string;
+  placeholder?: string;
+}) => {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const resize = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'; // Reset height
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`; // Set to scrollHeight
+    }
+  };
+
+  useEffect(() => {
+    resize();
+  }, [value]);
+
+  return (
+    <textarea
+      ref={textareaRef}
+      value={value}
+      onChange={onChange}
+      className={`${className} overflow-hidden`}
+      style={{ minHeight: minHeight }}
+      placeholder={placeholder}
+      rows={1}
+    />
+  );
+};
 
 const ConceptBoard: React.FC<Props> = ({ data, generalBrief, isLoading, onUpdate }) => {
   const [isExporting, setIsExporting] = useState(false);
@@ -148,17 +188,18 @@ const ConceptBoard: React.FC<Props> = ({ data, generalBrief, isLoading, onUpdate
           </div>
           
           <div className="border border-t-0 border-slate-200 rounded-b-lg overflow-hidden">
-            <table className="w-full border-collapse">
+            <table className="w-full border-collapse table-fixed">
               <tbody>
                 {/* 1. Concept */}
                 <tr className="border-b border-slate-200">
                   <ThComponent title="① 한 줄 컨셉" subtitle="Concept" />
                   <td className="p-4 align-top">
-                    <textarea 
+                    <AutoResizeTextarea
                       value={data.oneLineConcept}
                       onChange={(e) => handleChange('oneLineConcept', e.target.value)}
-                      className="w-full h-full min-h-[60px] bg-transparent border border-transparent hover:border-slate-200 focus:border-indigo-300 focus:bg-indigo-50/30 rounded p-2 outline-none resize-none transition-all text-lg font-bold text-slate-800 leading-relaxed"
+                      className="w-full bg-transparent border border-transparent hover:border-slate-200 focus:border-indigo-300 focus:bg-indigo-50/30 rounded p-2 outline-none resize-none transition-all text-lg font-bold text-slate-800 leading-relaxed"
                       placeholder="컨셉 내용이 입력됩니다."
+                      minHeight="60px"
                     />
                   </td>
                 </tr>
@@ -167,10 +208,11 @@ const ConceptBoard: React.FC<Props> = ({ data, generalBrief, isLoading, onUpdate
                 <tr className="border-b border-slate-200">
                   <ThComponent title="② 장르 및 포맷" subtitle="Genre & Format" />
                   <td className="p-4 align-top">
-                    <textarea 
+                    <AutoResizeTextarea 
                       value={data.genreFormat}
                       onChange={(e) => handleChange('genreFormat', e.target.value)}
-                      className="w-full h-full min-h-[80px] bg-transparent border border-transparent hover:border-slate-200 focus:border-indigo-300 focus:bg-indigo-50/30 rounded p-2 outline-none resize-none transition-all text-slate-700 leading-relaxed"
+                      className="w-full bg-transparent border border-transparent hover:border-slate-200 focus:border-indigo-300 focus:bg-indigo-50/30 rounded p-2 outline-none resize-none transition-all text-slate-700 leading-relaxed"
+                      minHeight="80px"
                     />
                   </td>
                 </tr>
@@ -179,10 +221,11 @@ const ConceptBoard: React.FC<Props> = ({ data, generalBrief, isLoading, onUpdate
                 <tr className="border-b border-slate-200">
                   <ThComponent title="③ 핵심 메시지" subtitle="Core Message" />
                   <td className="p-4 align-top">
-                    <textarea 
+                    <AutoResizeTextarea
                       value={data.keyMessage}
                       onChange={(e) => handleChange('keyMessage', e.target.value)}
-                      className="w-full h-full min-h-[80px] bg-transparent border border-transparent hover:border-slate-200 focus:border-indigo-300 focus:bg-indigo-50/30 rounded p-2 outline-none resize-none transition-all text-slate-700 leading-relaxed font-medium"
+                      className="w-full bg-transparent border border-transparent hover:border-slate-200 focus:border-indigo-300 focus:bg-indigo-50/30 rounded p-2 outline-none resize-none transition-all text-slate-700 leading-relaxed font-medium"
+                      minHeight="80px"
                     />
                   </td>
                 </tr>
@@ -191,10 +234,11 @@ const ConceptBoard: React.FC<Props> = ({ data, generalBrief, isLoading, onUpdate
                 <tr className="border-b border-slate-200">
                   <ThComponent title="④ 캐릭터" subtitle="Character" />
                   <td className="p-4 align-top">
-                    <textarea 
+                    <AutoResizeTextarea 
                       value={data.character}
                       onChange={(e) => handleChange('character', e.target.value)}
-                      className="w-full h-full min-h-[140px] bg-transparent border border-transparent hover:border-slate-200 focus:border-indigo-300 focus:bg-indigo-50/30 rounded p-2 outline-none resize-none transition-all text-slate-700 leading-relaxed whitespace-pre-wrap"
+                      className="w-full bg-transparent border border-transparent hover:border-slate-200 focus:border-indigo-300 focus:bg-indigo-50/30 rounded p-2 outline-none resize-none transition-all text-slate-700 leading-relaxed whitespace-pre-wrap"
+                      minHeight="140px"
                     />
                   </td>
                 </tr>
@@ -203,10 +247,11 @@ const ConceptBoard: React.FC<Props> = ({ data, generalBrief, isLoading, onUpdate
                 <tr className="border-b border-slate-200">
                   <ThComponent title="⑤ 톤 앤 매너" subtitle="Tone & Manner" />
                   <td className="p-4 align-top">
-                    <textarea 
+                    <AutoResizeTextarea
                       value={data.toneManner}
                       onChange={(e) => handleChange('toneManner', e.target.value)}
-                      className="w-full h-full min-h-[100px] bg-transparent border border-transparent hover:border-slate-200 focus:border-indigo-300 focus:bg-indigo-50/30 rounded p-2 outline-none resize-none transition-all text-slate-700 leading-relaxed"
+                      className="w-full bg-transparent border border-transparent hover:border-slate-200 focus:border-indigo-300 focus:bg-indigo-50/30 rounded p-2 outline-none resize-none transition-all text-slate-700 leading-relaxed"
+                      minHeight="100px"
                     />
                   </td>
                 </tr>
@@ -226,7 +271,7 @@ const ConceptBoard: React.FC<Props> = ({ data, generalBrief, isLoading, onUpdate
                         </div>
                         <div className="mt-1">
                           <label className="text-[10px] text-slate-400 font-bold mb-1 block uppercase tracking-wider">Image Generation Prompt</label>
-                          <p className="text-xs text-slate-500 font-mono bg-white p-3 rounded border border-slate-200 shadow-sm">{data.imagePrompt}</p>
+                          <p className="text-xs text-slate-500 font-mono bg-white p-3 rounded border border-slate-200 shadow-sm whitespace-pre-wrap break-all">{data.imagePrompt}</p>
                         </div>
                       </div>
                     ) : (
@@ -239,11 +284,11 @@ const ConceptBoard: React.FC<Props> = ({ data, generalBrief, isLoading, onUpdate
                         </div>
                         <div className="mt-1">
                           <label className="text-[10px] text-slate-400 font-bold mb-1 block uppercase tracking-wider">Suggested Prompt</label>
-                          <textarea 
+                          <AutoResizeTextarea
                             value={data.imagePrompt}
                             onChange={(e) => handleChange('imagePrompt', e.target.value)}
                             className="w-full bg-white border border-slate-300 rounded p-3 text-xs font-mono text-slate-600"
-                            rows={3}
+                            minHeight="60px"
                           />
                         </div>
                       </div>
