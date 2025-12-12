@@ -150,7 +150,7 @@ const ConceptBoard: React.FC<Props> = ({ data, isLoading, onUpdate }) => {
               </tr>
               <tr className="border-b border-slate-200">
                 <th className="py-4 px-6 bg-slate-50 text-left text-slate-700 font-bold border-r border-slate-200 align-middle">
-                  캐릭터 / 페르소나
+                  캐릭터
                 </th>
                 <td className="py-2 px-4 text-slate-600">
                   <textarea 
