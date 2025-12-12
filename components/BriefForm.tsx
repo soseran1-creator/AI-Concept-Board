@@ -114,7 +114,7 @@ const BriefForm: React.FC<Props> = ({ onGenerate, isGenerating }) => {
                   <input name="contentName" value={general.contentName} onChange={handleGeneralChange} className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="예: 꼬마 과학자의 하루" />
                 </div>
                 <div>
-                  <OptionalLabel label="요청 부서/ 담당자" />
+                  <OptionalLabel label="요청 부서/담당자, 제작 부서/담당자" />
                   <input name="requestDept" value={general.requestDept} onChange={handleGeneralChange} className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50" />
                 </div>
                 <div>

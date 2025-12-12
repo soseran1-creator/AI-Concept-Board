@@ -21,72 +21,47 @@ const ConceptBoard: React.FC<Props> = ({ data, generalBrief, isLoading, onUpdate
     try {
       // 1. Capture the element at high resolution
       const canvas = await html2canvas(input, {
-        scale: 2, // High resolution
+        scale: 2, // High resolution for better text clarity
         useCORS: true,
         backgroundColor: '#ffffff',
         logging: false
       });
       
+      const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      // 2. Define Page & Margins
       const pageWidth = pdf.internal.pageSize.getWidth(); // 210mm
       const pageHeight = pdf.internal.pageSize.getHeight(); // 297mm
       
-      // 2. Define Margins (10%)
-      const marginRatio = 0.1;
-      const marginX = pageWidth * marginRatio; // ~21mm
-      const marginY = pageHeight * marginRatio; // ~29.7mm
-      
-      const printWidth = pageWidth - (marginX * 2);
-      const printHeight = pageHeight - (marginY * 2);
+      // 10% margin
+      const margin = pageWidth * 0.1; 
+      const maxPrintWidth = pageWidth - (margin * 2);
+      const maxPrintHeight = pageHeight - (margin * 2);
 
-      // 3. Calculate Scale
-      // We scale the canvas width to match the printWidth
-      const imgWidth = printWidth;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      // 3. Calculate Scale to Fit ONE Page
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const imgRatio = imgWidth / imgHeight;
+      const printRatio = maxPrintWidth / maxPrintHeight;
 
-      // 4. Slice and Add Pages
-      let heightLeft = imgHeight;
-      let sourceY = 0; // Current Y position in the source canvas (scaled)
+      let finalWidth, finalHeight;
 
-      while (heightLeft > 0) {
-        // Create a temporary canvas for this page chunk
-        // We need to calculate how much of the original canvas corresponds to 'printHeight'
-        // ratio: canvas.width / printWidth
-        const scaleFactor = canvas.width / printWidth;
-        const sourcePageHeight = printHeight * scaleFactor;
-        
-        // Height to clip from source (min of remaining or full page height)
-        const sourceH = Math.min(heightLeft * scaleFactor, sourcePageHeight);
-        const destH = sourceH / scaleFactor; // Should equal printHeight or less for last page
-
-        const pageCanvas = document.createElement('canvas');
-        pageCanvas.width = canvas.width;
-        pageCanvas.height = sourceH;
-        
-        const ctx = pageCanvas.getContext('2d');
-        if (ctx) {
-          // Draw the slice
-          ctx.drawImage(
-            canvas,
-            0, sourceY * scaleFactor, canvas.width, sourceH, // Source rectangle
-            0, 0, canvas.width, sourceH // Destination rectangle
-          );
-          
-          const pageImgData = pageCanvas.toDataURL('image/png');
-          
-          // If not the first page, add a new page
-          if (sourceY > 0) {
-            pdf.addPage();
-          }
-          
-          // Add image at margin coordinates
-          pdf.addImage(pageImgData, 'PNG', marginX, marginY, printWidth, destH);
-        }
-
-        heightLeft -= destH;
-        sourceY += destH;
+      // If image is "taller" than the print area (relative to width), constrain by height
+      if (imgRatio < printRatio) {
+        finalHeight = maxPrintHeight;
+        finalWidth = finalHeight * imgRatio;
+      } else {
+        // Otherwise constrain by width
+        finalWidth = maxPrintWidth;
+        finalHeight = finalWidth / imgRatio;
       }
 
+      // 4. Center the image horizontally (optional, but looks better if constrained by height)
+      const xOffset = margin + (maxPrintWidth - finalWidth) / 2;
+      const yOffset = margin; // Top margin
+
+      pdf.addImage(imgData, 'PNG', xOffset, yOffset, finalWidth, finalHeight);
       pdf.save('AI_Concept_Board.pdf');
     } catch (error) {
       console.error('PDF generation failed', error);
@@ -153,22 +128,21 @@ const ConceptBoard: React.FC<Props> = ({ data, generalBrief, isLoading, onUpdate
         {/* PDF Header Info (Shows only if content exists or as placeholder) */}
         <div className="px-8 pt-8 pb-4 bg-white flex justify-end">
            <div className="text-right">
-              <span className="text-sm font-bold text-slate-500 mr-2">요청 부서/담당자:</span>
+              <span className="text-sm font-bold text-slate-500 mr-2">요청 부서/담당자, 제작 부서/담당자:</span>
               <span className="text-sm text-slate-800 font-medium underline decoration-slate-300 underline-offset-4">
-                {generalBrief?.requestDept ? generalBrief.requestDept : "　　　　　　　　　"}
+                {generalBrief?.requestDept ? generalBrief.requestDept : "　　　　　　　　　　　　　　"}
               </span>
            </div>
         </div>
 
         {/* Main Content */}
         <div className="px-8">
-          <div className="bg-slate-900 p-6 text-white flex justify-between items-end border-b-4 border-indigo-500 rounded-t-lg">
+          <div className="bg-indigo-700 p-6 text-white flex justify-between items-end border-b-4 border-indigo-900 rounded-t-lg">
             <div>
               <h2 className="text-2xl font-bold tracking-wider">PROJECT CONCEPT BOARD</h2>
-              <p className="text-slate-400 text-sm mt-1">AI Creative Director generated plan</p>
             </div>
             <div className="text-right">
-              <div className="text-xs text-slate-400">Date</div>
+              <div className="text-xs text-indigo-200">Date</div>
               <div className="font-mono">{new Date().toLocaleDateString()}</div>
             </div>
           </div>
